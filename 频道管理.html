@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube频道管理器</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            background-color: #f9f9f9;
+        }
+        
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 200px;
+            background: white;
+            padding: 20px;
+            height: 100vh;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            position: fixed;
+        }
+        
+        .menu-item {
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .menu-item:hover {
+            background: #f2f2f2;
+        }
+        
+        .menu-item.active {
+            background: #e5e5e5;
+            font-weight: bold;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            margin-left: 240px;
+        }
+        
+        .channel-section {
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .channel-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .channel-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+        
+        .channel-info {
+            flex: 1;
+        }
+        
+        .channel-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .channel-subs {
+            font-size: 14px;
+            color: #606060;
+            margin: 5px 0 0 0;
+        }
+        
+        .delete-channel {
+            background: none;
+            border: none;
+            color: #FF0000;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .video-card {
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .video-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .video-thumbnail {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+        
+        .video-info {
+            padding: 10px;
+        }
+        
+        .video-title {
+            font-size: 14px;
+            margin: 0 0 5px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .video-stats {
+            font-size: 12px;
+            color: #606060;
+        }
+        
+        /* 页面样式 */
+        .page {
+            display: none;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .page-title {
+            margin-top: 0;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .url-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        .save-btn {
+            padding: 10px 20px;
+            background: #FF0000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .save-btn:hover {
+            background: #CC0000;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #606060;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        /* 链接项目样式 */
+        .link-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .link-info {
+            flex: 1;
+            margin-right: 15px;
+        }
+        
+        .link-url {
+            font-size: 14px;
+            color: #065fd4;
+            word-break: break-all;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .link-note {
+            font-size: 13px;
+            color: #606060;
+            margin-top: 5px;
+        }
+        
+        .link-actions {
+            display: flex;
+        }
+        
+        .note-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        
+        /* 添加按钮样式 */
+        .action-buttons {
+            display: flex;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        /* 刷新按钮样式 */
+        .refresh-btn {
+            padding: 10px 15px;
+            background: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: #3367D6;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .modal-input-group {
+            display: flex;
+            margin-top: 20px;
+        }
+        
+        .modal-url-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        /* 错误提示 */
+        #modal-error {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        /* Toast通知 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 160px;
+                padding: 10px;
+            }
+            
+            .main-content {
+                margin-left: 180px;
+                padding: 10px;
+            }
+            
+            .videos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .modal-content {
+                width: 90%;
+                margin: 30% auto;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .refresh-btn {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+        <div class="menu-item active" onclick="showPage('collection')">收藏</div>
+        <div class="menu-item" onclick="showPage('tools')">工具</div>
+        <div class="menu-item" onclick="showPage('compare')">对标</div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 收藏页面 -->
+        <div id="collection-page" class="page">
+            <div class="action-buttons">
+                <button class="save-btn" onclick="showAddChannelModal('collection')">添加频道</button>
+                <button class="refresh-btn" onclick="refreshCollectionChannels()">刷新</button>
+            </div>
+            <div id="channels-container">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+        
+        <!-- 工具页面 -->
+        <div id="tools-page" class="page">
+            <h2 class="page-title">工具</h2>
+            <div class="input-group">
+                <input type="text" id="tools-url" class="url-input" placeholder="输入任意URL链接">
+                <button class="save-btn" onclick="addLink()">添加</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="link-note" class="url-input" placeholder="添加备注(可选)">
+            </div>
+            <div id="tools-results">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+        
+        <!-- 对标页面 -->
+        <div id="compare-page" class="page">
+            <div class="action-buttons">
+                <button class="save-btn" onclick="showAddChannelModal('compare')">添加对标频道</button>
+                <button class="refresh-btn" onclick="refreshCompareChannels()">刷新</button>
+            </div>
+            <div id="compare-results">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+        
+        <!-- 添加频道的模态框 -->
+        <div id="addChannelModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="hideAddChannelModal()">&times;</span>
+                <h2 id="modal-title">添加YouTube频道</h2>
+                <div class="modal-input-group">
+                    <input type="text" id="modal-channel-url" class="modal-url-input" placeholder="输入YouTube频道URL、ID或用户名">
+                    <button class="save-btn" id="modal-add-btn">添加</button>
+                </div>
+                <div id="modal-error"></div>
+            </div>
+        </div>
+        
+        <!-- Toast通知 -->
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script>
+        // 独立的数据存储
+        const STORAGE_KEYS = {
+            COLLECTION: 'youtube_collection',
+            TOOLS: 'youtube_tools',
+            COMPARE: 'youtube_compare'
+        };
+        
+        let appData = {
+            collection: [],
+            tools: [],
+            compare: []
+        };
+        
+        // 当前模态框类型
+        let currentModalType = '';
+        
+        // YouTube API密钥 (需要替换为您自己的API密钥)
+        const API_KEY = 'AIzaSyCsIKYLtJg9JLBlX8wezemd5ikBWxVLLWE'; // 替换为您的API密钥
+        
+        // 支持的URL格式正则表达式
+        const YOUTUBE_URL_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/i;
+        const CHANNEL_ID_REGEX = /^UC[\w-]{21}[AQgw]$/;
+        const USERNAME_REGEX = /^@?[\w]+$/;
+        
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllData();
+            showPage('collection');
+            
+            // 设置模态框添加按钮事件
+            document.getElementById('modal-add-btn').onclick = function() {
+                if (currentModalType === 'collection') {
+                    addCollectionChannel();
+                } else if (currentModalType === 'compare') {
+                    addCompareChannel();
+                }
+            };
+            
+            // 点击模态框外部关闭
+            window.onclick = function(event) {
+                const modal = document.getElementById('addChannelModal');
+                if (event.target == modal) {
+                    hideAddChannelModal();
+                }
+            }
+            
+            // 按ESC键关闭模态框
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    hideAddChannelModal();
+                }
+            });
+        });
+        
+        // 加载所有数据
+        function loadAllData() {
+            // 加载收藏数据
+            const collectionData = localStorage.getItem(STORAGE_KEYS.COLLECTION);
+            if (collectionData) {
+                appData.collection = JSON.parse(collectionData);
+            }
+            
+            // 加载工具数据
+            const toolsData = localStorage.getItem(STORAGE_KEYS.TOOLS);
+            if (toolsData) {
+                appData.tools = JSON.parse(toolsData);
+            }
+            
+            // 加载对标数据
+            const compareData = localStorage.getItem(STORAGE_KEYS.COMPARE);
+            if (compareData) {
+                appData.compare = JSON.parse(compareData);
+            }
+            
+            renderCollectionChannels();
+            renderLinks();
+            renderCompareChannels();
+        }
+        
+        // 保存数据
+        function saveData(key) {
+            switch(key) {
+                case 'collection':
+                    localStorage.setItem(STORAGE_KEYS.COLLECTION, JSON.stringify(appData.collection));
+                    break;
+                case 'tools':
+                    localStorage.setItem(STORAGE_KEYS.TOOLS, JSON.stringify(appData.tools));
+                    break;
+                case 'compare':
+                    localStorage.setItem(STORAGE_KEYS.COMPARE, JSON.stringify(appData.compare));
+                    break;
+            }
+        }
+        
+        // 显示不同页面
+        function showPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.style.display = 'none';
+            });
+            
+            // 显示选中的页面
+            document.getElementById(pageId + '-page').style.display = 'block';
+            
+            // 更新菜单激活状态
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 找到当前点击的菜单项并激活
+            const menuItems = document.querySelectorAll('.menu-item');
+            for (let i = 0; i < menuItems.length; i++) {
+                if (menuItems[i].textContent.trim() === 
+                    (pageId === 'collection' ? '收藏' : 
+                     pageId === 'tools' ? '工具' : '对标')) {
+                    menuItems[i].classList.add('active');
+                    break;
+                }
+            }
+        }
+        
+        // ========== 模态框功能 ==========
+        function showAddChannelModal(type) {
+            currentModalType = type;
+            const modalTitle = document.getElementById('modal-title');
+            document.getElementById('modal-error').style.display = 'none';
+            
+            if (type === 'collection') {
+                modalTitle.textContent = '添加收藏频道';
+            } else if (type === 'compare') {
+                modalTitle.textContent = '添加对标频道';
+            }
+            
+            document.getElementById('addChannelModal').style.display = 'block';
+            document.getElementById('modal-channel-url').focus();
+        }
+        
+        function hideAddChannelModal() {
+            document.getElementById('addChannelModal').style.display = 'none';
+            document.getElementById('modal-channel-url').value = '';
+            document.getElementById('modal-error').style.display = 'none';
+            currentModalType = '';
+        }
+        
+        // ========== 刷新功能 ==========
+        function refreshCollectionChannels() {
+            const container = document.getElementById('channels-container');
+            container.innerHTML = '<div class="loading">刷新中...</div>';
+            
+            // 重新获取所有收藏频道的视频
+            const promises = appData.collection.map(channel => {
+                return fetchChannelVideos(channel.id, 'collection');
+            });
+            
+            Promise.all(promises)
+                .then(() => showToast('收藏频道已刷新'))
+                .catch(error => {
+                    console.error('刷新失败:', error);
+                    showToast('刷新失败: ' + error.message);
+                });
+        }
+        
+        function refreshCompareChannels() {
+            const container = document.getElementById('compare-results');
+            container.innerHTML = '<div class="loading">刷新中...</div>';
+            
+            // 重新获取所有对标频道的视频
+            const promises = appData.compare.map(channel => {
+                return fetchChannelVideos(channel.id, 'compare');
+            });
+            
+            Promise.all(promises)
+                .then(() => showToast('对标频道已刷新'))
+                .catch(error => {
+                    console.error('刷新失败:', error);
+                    showToast('刷新失败: ' + error.message);
+                });
+        }
+        
+        // 显示Toast通知
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+        
+        // 显示错误消息
+        function showError(message) {
+            const errorElement = document.getElementById('modal-error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        
+        // ========== 收藏页面功能 ==========
+        function renderCollectionChannels() {
+            const container = document.getElementById('channels-container');
+            
+            if (appData.collection.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无收藏的频道</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            appData.collection.forEach(channel => {
+                const channelSection = document.createElement('div');
+                channelSection.className = 'channel-section';
+                channelSection.id = `channel-${channel.id}`;
+                channelSection.innerHTML = `
+                    <div class="channel-header">
+                        <img src="${channel.avatar}" alt="频道头像" class="channel-avatar" onerror="this.src='https://via.placeholder.com/50'">
+                        <div class="channel-info">
+                            <h3 class="channel-name">${channel.name}</h3>
+                            <p class="channel-subs">${channel.subs} 订阅者</p>
+                        </div>
+                        <button class="delete-channel" onclick="deleteCollectionChannel('${channel.id}')">删除</button>
+                    </div>
+                    <div class="videos-grid" id="videos-${channel.id}">
+                        <div class="loading">加载视频中...</div>
+                    </div>
+                `;
+                container.appendChild(channelSection);
+                
+                // 获取频道视频
+                fetchChannelVideos(channel.id, 'collection');
+            });
+        }
+        
+        // 从URL提取频道ID - 全面支持各种格式
+        async function extractChannelId(input) {
+            input = input.trim();
+            
+            // 如果是URL格式
+            if (YOUTUBE_URL_REGEX.test(input)) {
+                // 处理频道URL格式: /channel/UCxxxxxx
+                const channelIdMatch = input.match(/youtube\.com\/channel\/(UC[\w-]{21}[AQgw])/i);
+                if (channelIdMatch && channelIdMatch[1]) {
+                    return channelIdMatch[1];
+                }
+                
+                // 处理用户URL格式: /@username
+                const usernameMatch = input.match(/youtube\.com\/@([\w]+)/i);
+                if (usernameMatch && usernameMatch[1]) {
+                    return await getChannelIdFromUsername(usernameMatch[1]);
+                }
+                
+                // 处理旧版用户URL格式: /user/username 或 /c/username
+                const legacyUserMatch = input.match(/youtube\.com\/(user|c)\/([\w]+)/i);
+                if (legacyUserMatch && legacyUserMatch[2]) {
+                    return await getChannelIdFromUsername(legacyUserMatch[2]);
+                }
+                
+                // 处理视频页URL中的频道信息
+                if (input.includes('youtube.com/watch')) {
+                    return await getChannelIdFromVideoUrl(input);
+                }
+                
+                // 处理简短的youtu.be链接
+                if (input.includes('youtu.be')) {
+                    const videoId = input.split('/').pop().split('?')[0];
+                    return await getChannelIdFromVideoUrl(`https://www.youtube.com/watch?v=${videoId}`);
+                }
+            }
+            // 如果已经是ID格式 (以UC开头)
+            else if (CHANNEL_ID_REGEX.test(input)) {
+                return input;
+            }
+            // 可能是用户名 (@username 或 username)
+            else if (USERNAME_REGEX.test(input)) {
+                const username = input.startsWith('@') ? input.substring(1) : input;
+                return await getChannelIdFromUsername(username);
+            }
+            
+            throw new Error('无法识别的YouTube频道URL或ID');
+        }
+        
+        // 通过视频URL获取频道ID
+        async function getChannelIdFromVideoUrl(videoUrl) {
+            try {
+                const videoId = videoUrl.match(/[?&]v=([^&]+)/)?.[1] || 
+                              videoUrl.match(/youtu\.be\/([^?]+)/)?.[1];
+                if (!videoId) throw new Error('无法提取视频ID');
+                
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`);
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    return data.items[0].snippet.channelId;
+                }
+                throw new Error('无法从视频URL获取频道信息');
+            } catch (error) {
+                console.error('获取视频信息失败:', error);
+                throw error;
+            }
+        }
+        
+        // 通过用户名获取频道ID
+        async function getChannelIdFromUsername(username) {
+            try {
+                // 先尝试直接获取频道信息
+                const channelResponse = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&forUsername=${username}&key=${API_KEY}`);
+                const channelData = await channelResponse.json();
+                
+                if (channelData.items && channelData.items.length > 0) {
+                    return channelData.items[0].id;
+                }
+                
+                // 如果没有找到，尝试搜索频道
+                const searchResponse = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${username}&type=channel&key=${API_KEY}`);
+                const searchData = await searchResponse.json();
+                
+                if (searchData.items && searchData.items.length > 0) {
+                    return searchData.items[0].id.channelId;
+                }
+                
+                throw new Error('无法找到该用户名对应的频道');
+            } catch (error) {
+                console.error('获取频道ID失败:', error);
+                throw error;
+            }
+        }
+        
+        async function addCollectionChannel() {
+            const input = document.getElementById('modal-channel-url');
+            const url = input.value.trim();
+            
+            if (!url) {
+                showError('请输入YouTube频道URL、ID或用户名');
+                return;
+            }
+            
+            try {
+                const channelId = await extractChannelId(url);
+                
+                // 检查是否已存在
+                const exists = appData.collection.some(c => c.id === channelId);
+                if (exists) {
+                    showError('该频道已在收藏中');
+                    return;
+                }
+                
+                // 获取频道信息
+                const channelInfo = await fetchChannelInfo(channelId);
+                
+                // 添加到收藏列表
+                appData.collection.push({
+                    id: channelId,
+                    name: channelInfo.name,
+                    avatar: channelInfo.avatar,
+                    subs: channelInfo.subs
+                });
+                
+                saveData('collection');
+                renderCollectionChannels();
+                hideAddChannelModal();
+                showToast('频道添加成功');
+                
+            } catch (error) {
+                console.error('添加频道失败:', error);
+                showError('添加失败: ' + error.message);
+            }
+        }
+        
+        async function addCompareChannel() {
+            const input = document.getElementById('modal-channel-url');
+            const url = input.value.trim();
+            
+            if (!url) {
+                showError('请输入YouTube频道URL、ID或用户名');
+                return;
+            }
+            
+            try {
+                const channelId = await extractChannelId(url);
+                
+                // 检查是否已存在
+                const exists = appData.compare.some(c => c.id === channelId);
+                if (exists) {
+                    showError('该频道已在对标列表中');
+                    return;
+                }
+                
+                // 获取频道信息
+                const channelInfo = await fetchChannelInfo(channelId);
+                
+                // 添加到对标列表
+                appData.compare.push({
+                    id: channelId,
+                    name: channelInfo.name,
+                    avatar: channelInfo.avatar,
+                    subs: channelInfo.subs
+                });
+                
+                saveData('compare');
+                renderCompareChannels();
+                hideAddChannelModal();
+                showToast('对标频道添加成功');
+                
+            } catch (error) {
+                console.error('添加对标频道失败:', error);
+                showError('添加失败: ' + error.message);
+            }
+        }
+        
+        function deleteCollectionChannel(channelId) {
+            if (confirm('确定要从收藏中删除这个频道吗？')) {
+                appData.collection = appData.collection.filter(c => c.id !== channelId);
+                saveData('collection');
+                renderCollectionChannels();
+                showToast('频道已删除');
+            }
+        }
+        
+        // ========== 工具页面功能 ==========
+        function renderLinks() {
+            const container = document.getElementById('tools-results');
+            
+            if (appData.tools.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无保存的链接</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            appData.tools.forEach(link => {
+                const linkItem = document.createElement('div');
+                linkItem.className = 'link-item';
+                linkItem.innerHTML = `
+                    <div class="link-info">
+                        <div class="link-url">${link.url}</div>
+                        ${link.note ? `<div class="link-note">备注: ${link.note}</div>` : ''}
+                    </div>
+                    <div class="link-actions">
+                        <button class="delete-channel" onclick="deleteLink('${link.id}')">删除</button>
+                    </div>
+                `;
+                
+                // 点击链接打开URL
+                linkItem.querySelector('.link-url').onclick = (e) => {
+                    e.preventDefault();
+                    window.open(link.url, '_blank');
+                };
+                
+                container.appendChild(linkItem);
+            });
+        }
+        
+        function addLink() {
+            const urlInput = document.getElementById('tools-url');
+            const noteInput = document.getElementById('link-note');
+            const url = urlInput.value.trim();
+            const note = noteInput.value.trim();
+            
+            if (!url) {
+                showToast('请输入链接URL');
+                return;
+            }
+            
+            // 添加到工具列表
+            appData.tools.push({
+                url: url,
+                note: note,
+                id: Date.now().toString()
+            });
+            
+            // 清空输入框
+            urlInput.value = '';
+            noteInput.value = '';
+            
+            saveData('tools');
+            renderLinks();
+            showToast('链接添加成功');
+        }
+        
+        function deleteLink(linkId) {
+            if (confirm('确定要删除这个链接吗？')) {
+                appData.tools = appData.tools.filter(link => link.id !== linkId);
+                saveData('tools');
+                renderLinks();
+                showToast('链接已删除');
+            }
+        }
+        
+        // ========== 对标页面功能 ==========
+        function renderCompareChannels() {
+            const container = document.getElementById('compare-results');
+            
+            if (appData.compare.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无对标频道</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            appData.compare.forEach(channel => {
+                const channelSection = document.createElement('div');
+                channelSection.className = 'channel-section';
+                channelSection.id = `channel-${channel.id}`;
+                channelSection.innerHTML = `
+                    <div class="channel-header">
+                        <img src="${channel.avatar}" alt="频道头像" class="channel-avatar" onerror="this.src='https://via.placeholder.com/50'">
+                        <div class="channel-info">
+                            <h3 class="channel-name">${channel.name}</h3>
+                            <p class="channel-subs">${channel.subs} 订阅者</p>
+                        </div>
+                        <button class="delete-channel" onclick="deleteCompareChannel('${channel.id}')">删除</button>
+                    </div>
+                    <div class="videos-grid" id="videos-${channel.id}">
+                        <div class="loading">加载视频中...</div>
+                    </div>
+                `;
+                container.appendChild(channelSection);
+                
+                // 获取频道视频
+                fetchChannelVideos(channel.id, 'compare');
+            });
+        }
+        
+        function deleteCompareChannel(channelId) {
+            if (confirm('确定要从对标列表中删除这个频道吗？')) {
+                appData.compare = appData.compare.filter(c => c.id !== channelId);
+                saveData('compare');
+                renderCompareChannels();
+                showToast('对标频道已删除');
+            }
+        }
+        
+        // ========== 通用功能 ==========
+        // 获取频道信息
+        async function fetchChannelInfo(channelId) {
+            try {
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`);
+                const data = await response.json();
+                
+                if (!data.items || data.items.length === 0) {
+                    throw new Error('频道不存在或无法访问');
+                }
+                
+                const channel = data.items[0];
+                return {
+                    name: channel.snippet.title,
+                    avatar: channel.snippet.thumbnails?.medium?.url || 'https://via.placeholder.com/50',
+                    subs: formatNumber(channel.statistics?.subscriberCount || 0)
+                };
+            } catch (error) {
+                console.error('获取频道信息失败:', error);
+                throw error;
+            }
+        }
+        
+        // 获取频道视频
+        async function fetchChannelVideos(channelId, type) {
+            try {
+                const container = document.getElementById(`videos-${channelId}`);
+                if (!container) return;
+                
+                // 获取视频列表
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=5&order=date&type=video&key=${API_KEY}`);
+                const data = await response.json();
+                
+                if (!data.items || data.items.length === 0) {
+                    container.innerHTML = '<div class="empty-state">该频道没有公开视频</div>';
+                    return;
+                }
+                
+                // 获取视频统计数据
+                const videoIds = data.items.map(item => item.id.videoId).join(',');
+                const statsResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds}&key=${API_KEY}`);
+                const statsData = await statsResponse.json();
+                
+                // 渲染视频
+                container.innerHTML = '';
+                data.items.forEach((item, index) => {
+                    const videoStats = statsData.items[index]?.statistics || {};
+                    const viewCount = formatNumber(videoStats.viewCount || 0);
+                    const thumbnail = item.snippet.thumbnails?.medium?.url || 'https://via.placeholder.com/180x100';
+                    
+                    const videoCard = document.createElement('div');
+                    videoCard.className = 'video-card';
+                    videoCard.innerHTML = `
+                        <img src="${thumbnail}" alt="视频缩略图" class="video-thumbnail" onerror="this.src='https://via.placeholder.com/180x100'">
+                        <div class="video-info">
+                            <div class="video-title">${item.snippet.title}</div>
+                            <div class="video-stats">${viewCount} 次观看</div>
+                        </div>
+                    `;
+                    videoCard.onclick = () => {
+                        window.open(`https://youtube.com/watch?v=${item.id.videoId}`, '_blank');
+                    };
+                    container.appendChild(videoCard);
+                });
+            } catch (error) {
+                console.error('获取视频失败:', error);
+                const container = document.getElementById(`videos-${channelId}`);
+                if (container) {
+                    container.innerHTML = '<div class="empty-state">加载视频失败</div>';
+                }
+            }
+        }
+        
+        // 格式化数字
+        function formatNumber(num) {
+            return parseInt(num || 0).toLocaleString();
+        }
+    </script>
+</body>
+</html>v
